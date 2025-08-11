@@ -54,7 +54,7 @@ class TestGroupContract:
         group_helper = GroupHelper(university_api_utils_admin)
         response = group_helper.post_groups(json={"name": faker.name()})
         group_id = response.json().get("id")
-        response = group_helper.delete_group(str(group_id))
+        response = group_helper.delete_group(group_id)
 
         assert (response.status_code ==
                 requests.status_codes.codes.ok), \
@@ -72,7 +72,7 @@ class TestGroupContract:
     @pytest.mark.parametrize("group_id", generate_invalid_group_ids())
     def test_get_nonexistent_group(self, university_api_utils_admin, group_id):
         group_helper = GroupHelper(university_api_utils_admin)
-        response = group_helper.get_group(str(group_id))
+        response = group_helper.get_group(group_id)
 
         assert (response.status_code ==
                 requests.status_codes.codes.not_found), \
@@ -89,7 +89,7 @@ class TestGroupContract:
         group_id = response.json().get("id")
 
         response = group_helper.update_group(
-            group_id=str(group_id), json={"name": random.choice(group_names)})
+            group_id=group_id, json={"name": random.choice(group_names)})
 
         assert (response.status_code ==
                 requests.status_codes.codes.conflict), \

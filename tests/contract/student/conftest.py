@@ -5,7 +5,7 @@ from services.university.helpers.group_helper import GroupHelper
 faker = Faker()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def created_group(university_api_utils_admin):
     group_helper = GroupHelper(university_api_utils_admin)
     response = group_helper.post_groups(json={
@@ -14,4 +14,4 @@ def created_group(university_api_utils_admin):
 
     yield group_id
 
-    group_helper.delete_group(group_id)
+    group_helper.delete_group(group_id=group_id)

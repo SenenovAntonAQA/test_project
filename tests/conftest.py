@@ -50,9 +50,21 @@ def auth_api_utils_admin(access_token):
     return api_utils
 
 @pytest.fixture(scope="function", autouse=False)
+def auth_api_utils_invalid_token():
+    api_utils = ApiUtils(url=AuthService.SERVICE_URL, headers={
+        "Authorization": f"Invalid test token"})
+    return api_utils
+
+@pytest.fixture(scope="function", autouse=False)
 def university_api_utils_admin(access_token):
     api_utils = ApiUtils(url=UniversityService.SERVICE_URL, headers={
         "Authorization": f"Bearer {access_token}"})
+    return api_utils
+
+@pytest.fixture(scope="function", autouse=False)
+def university_api_utils_invalid_token():
+    api_utils = ApiUtils(url=UniversityService.SERVICE_URL, headers={
+        "Authorization": f"Invalid test token"})
     return api_utils
 
 @pytest.fixture(scope="session", autouse=True)

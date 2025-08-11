@@ -16,14 +16,14 @@ class StudentHelper(BaseHelper):
         return response
 
     def delete_student(self, student_id: str) -> requests.Response:
-        response = self.api_utils.delete(f"self.ROOT_ENDPOINT{student_id}/")
+        response = self.api_utils.delete(f"{self.ROOT_ENDPOINT}{student_id}/")
         return response
 
     def get_student(self, student_id: str) -> requests.Response:
-        response = self.api_utils.get(f"self.ROOT_ENDPOINT{student_id}/")
+        response = self.api_utils.get(f"{self.ROOT_ENDPOINT}{student_id}/")
         return response
 
     def update_student(self, student_id: str, json: dict) -> requests.Response:
-        response = self.api_utils.update(f"self.ROOT_ENDPOINT{student_id}/",
-                                        json=json)
+        response = self.api_utils.update(f"{self.ROOT_ENDPOINT}{student_id}/",
+                                         json=json)
         return response

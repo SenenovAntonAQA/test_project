@@ -4,20 +4,23 @@ from faker import Faker
 
 faker = Faker()
 
+def generate_unique_group_id(existing_numbers: list, min = 1, max = 1000):
+    available_numbers = list(set(range(min, max+1)) - set(existing_numbers))
+    if not available_numbers:
+        raise ValueError("No available group numbers left to choose from.")
+    return random.choice(available_numbers)
 
 def generate_invalid_group_ids():
     return [-random.randint(1, 100),
             0,
             random.randint(1000, 1000000)]
 
-
 def generate_invalid_groups():
     return [-random.randint(1, 100),
             0,
             None,  # null
             " ",
-            "",
-            random.randint(1000, 1000000)]
+            ""]
 
 
 def generate_invalid_names():
@@ -30,7 +33,7 @@ def generate_invalid_names():
             [],  # list
             " ",
             "",
-            faker.name() + random.choice(symbols)
+            random.choice(symbols)
             ]
 
 
@@ -46,6 +49,17 @@ def generate_invalid_email():
             "test@yandex",
             "@yandex.ru"]
 
+
+def get_grade_random_choice():
+    return random.randint(1, 5)
+
+def get_subject_random_choice():
+    return random.choice(
+        ['Mathematics',
+         'Physics',
+         'History',
+         'Biology',
+         'Geography'])
 
 def get_degree_random_choice():
     return random.choice(

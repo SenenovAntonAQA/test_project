@@ -15,15 +15,15 @@ class GroupHelper(BaseHelper):
         response = self.api_utils.post(self.ROOT_ENDPOINT, json=json)
         return response
 
-    def delete_group(self, group_id: str) -> requests.Response:
-        response = self.api_utils.delete(f"self.ROOT_ENDPOINT{group_id}/")
+    def delete_group(self, group_id: int) -> requests.Response:
+        response = self.api_utils.delete(f"{self.ROOT_ENDPOINT}{group_id}/")
         return response
 
-    def get_group(self, group_id: str) -> requests.Response:
-        response = self.api_utils.get(f"self.ROOT_ENDPOINT{group_id}/")
+    def get_group(self, group_id: int) -> requests.Response:
+        response = self.api_utils.get(f"{self.ROOT_ENDPOINT}{group_id}/")
         return response
 
-    def update_group(self, group_id: str, json: dict) -> requests.Response:
-        response = self.api_utils.update(f"self.ROOT_ENDPOINT{group_id}/",
+    def update_group(self, group_id: int, json: dict) -> requests.Response:
+        response = self.api_utils.update(f"{self.ROOT_ENDPOINT}{group_id}/",
                                         json=json)
         return response

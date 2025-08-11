@@ -4,12 +4,15 @@ import pytest
 import requests
 from faker import Faker
 
+from services.university.helpers.group_helper import GroupHelper
 from services.university.helpers.student_helper import StudentHelper
 from utils.random_utils import (generate_invalid_names,
                                 get_degree_random_choice,
                                 generate_russian_phone,
                                 generate_invalid_email,
-                                generate_invalid_groups)
+                                generate_invalid_groups,
+                                generate_invalid_group_ids,
+                                generate_unique_group_id)
 
 faker = Faker()
 
@@ -100,10 +103,12 @@ class TestCreateStudent:
             (f"Wrong status code. Actual: '{response.status_code}', "
              f"but expected: '{requests.status_codes.codes.unprocessable}'")
 
+    def test_create_student_not_found_group(self, university_api_utils_admin):
+        group_helper = GroupHelper(university_api_utils_admin)
+        response = group_helper.get_groups()
+        groups = response.json()
+        group_ids = [group["id"] for group in groups]
 
-class TestUpdateStudent:
-    def test_update_student_phones(self, university_api_utils_admin,
-                                   created_group):
         student_helper = StudentHelper(university_api_utils_admin)
         response = student_helper.post_students(
             json={"first_name": faker.first_name(),
@@ -111,14 +116,34 @@ class TestUpdateStudent:
                   "email": faker.email(),
                   "degree": get_degree_random_choice(),
                   "phone": generate_russian_phone(),
-                  "group_id": created_group})
+                  "group_id": generate_unique_group_id(group_ids)})
 
+        assert response.status_code == requests.status_codes.codes.not_found, \
+            (f"Wrong status code. Actual: '{response.status_code}', "
+             f"but expected: '{requests.status_codes.codes.not_found}'")
+
+
+class TestUpdateStudent:
+    def test_update_student_phones(self, university_api_utils_admin,
+                                   created_group):
+        student_helper = StudentHelper(university_api_utils_admin)
+
+        payload = {"first_name": faker.first_name(),
+                   "last_name": faker.last_name(),
+                   "email": faker.email(),
+                   "degree": get_degree_random_choice(),
+                   "phone": generate_russian_phone(),
+                   "group_id": created_group}
+
+        response = student_helper.post_students(json=payload)
         student_id = response.json()['id']
-        new_student_phone = generate_russian_phone()
 
-        response = student_helper.update_student(
-            student_id=student_id,
-            json={"phone": new_student_phone})
+        upd_payload = payload.copy()
+        new_student_phone = generate_russian_phone()
+        upd_payload["phone"] = new_student_phone
+
+        response = student_helper.update_student(student_id=student_id,
+                                                 json=upd_payload)
 
         assert response.status_code == requests.status_codes.codes.ok, \
             (f"Wrong status code. Actual: '{response.status_code}', "
@@ -132,22 +157,26 @@ class TestUpdateStudent:
                                      university_api_utils_admin,
                                      created_group):
         student_helper = StudentHelper(university_api_utils_admin)
+
         response = student_helper.get_students()
         students = response.json()
         emails = [student["email"] for student in students]
 
-        response = student_helper.post_students(
-            json={"first_name": faker.first_name(),
-                  "last_name": faker.last_name(),
-                  "email": faker.email(),
-                  "degree": get_degree_random_choice(),
-                  "phone": generate_russian_phone(),
-                  "group_id": created_group})
+        payload = {"first_name": faker.first_name(),
+                   "last_name": faker.last_name(),
+                   "email": faker.email(),
+                   "degree": get_degree_random_choice(),
+                   "phone": generate_russian_phone(),
+                   "group_id": created_group}
 
+        response = student_helper.post_students(json=payload)
         student_id = response.json()['id']
-        response = student_helper.update_student(
-            student_id=student_id,
-            json={"email": random.choice(emails)})
+
+        upd_payload = payload.copy()
+        upd_payload["email"] = random.choice(emails)
+
+        response = student_helper.update_student(student_id=student_id,
+                                                 json=upd_payload)
 
         assert response.status_code == requests.status_codes.codes.conflict, \
             (f"Wrong status code. Actual: '{response.status_code}', "
