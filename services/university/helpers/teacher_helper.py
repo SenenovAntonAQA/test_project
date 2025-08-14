@@ -6,6 +6,7 @@ class TeacherHelper(BaseHelper):
     ENDPOINT_PREFIX = "/teachers"
 
     ROOT_ENDPOINT = f"{ENDPOINT_PREFIX}/"
+    TEACHER_DETAIL_ENDPOINT = f"{ENDPOINT_PREFIX}/{{teacher_id}}/"
 
     def get_teachers(self) -> requests.Response:
         response = self.api_utils.get(self.ROOT_ENDPOINT)
@@ -16,14 +17,16 @@ class TeacherHelper(BaseHelper):
         return response
 
     def delete_teacher(self, teacher_id: str) -> requests.Response:
-        response = self.api_utils.delete(f"{self.ROOT_ENDPOINT}{teacher_id}/")
+        endpoint = self.TEACHER_DETAIL_ENDPOINT.format(teacher_id=teacher_id)
+        response = self.api_utils.delete(endpoint)
         return response
 
     def get_teacher(self, teacher_id: str) -> requests.Response:
-        response = self.api_utils.get(f"{self.ROOT_ENDPOINT}{teacher_id}/")
+        endpoint = self.TEACHER_DETAIL_ENDPOINT.format(teacher_id=teacher_id)
+        response = self.api_utils.get(endpoint)
         return response
 
     def update_teacher(self, teacher_id: str, json: dict) -> requests.Response:
-        response = self.api_utils.update(f"{self.ROOT_ENDPOINT}{teacher_id}/",
-                                        json=json)
+        endpoint = self.TEACHER_DETAIL_ENDPOINT.format(teacher_id=teacher_id)
+        response = self.api_utils.update(endpoint,json=json)
         return response

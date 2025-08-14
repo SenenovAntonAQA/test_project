@@ -12,8 +12,8 @@ from utils.random_utils import generate_russian_phone
 faker = Faker()
 
 
-class TestStudentCreate:
-    def test_student_create(self, university_api_utils_admin):
+class TestStudentDelete:
+    def test_delete_student(self, university_api_utils_admin):
         Logger.info('### Step 1. Create group')
         university_service = UniversityService(
             api_utils=university_api_utils_admin)
@@ -28,9 +28,14 @@ class TestStudentCreate:
                                      [option for option in DegreeEnum]),
                                  phone=generate_russian_phone(),
                                  group_id=group_response.id)
-        student_response = university_service.create_student(
+        create_student_response = university_service.create_student(
             student_request=student)
 
-        assert student_response.group_id == group_response.id, \
-            (f"Wrong group id. Actual: '{student_response.group_id}', "
-             f"but expected: '{group_response.id}'")
+        Logger.info('### Step 3. Delete student')
+
+        delete_student_response = university_service.delete_student(
+            student_id=create_student_response.id)
+
+        assert delete_student_response.detail == "Student deleted", \
+            (f"Incorrect details, actual: '{delete_student_response.detail}'"
+             f", but expected: 'Student deleted'")

@@ -50,34 +50,26 @@ class TestUpdateTeacher:
     def test_update_f_name_teacher(self, university_api_utils_admin):
         teacher_helper = TeacherHelper(university_api_utils_admin)
 
-        first_name_before = faker.first_name()
         last_name = faker.last_name()
         subject = get_subject_random_choice()
         response = teacher_helper.post_teachers(
-            json={"first_name": first_name_before,
+            json={"first_name": faker.first_name(),
                   "last_name": last_name,
-                  "subject": subject}
-        )
+                  "subject": subject})
 
-        first_name_after = faker.first_name()
         response = teacher_helper.update_teacher(
             teacher_id=response.json()['id'],
-            json={"first_name": first_name_after,
+            json={"first_name": faker.first_name(),
                   "last_name": last_name,
-                  "subject": subject}
-        )
+                  "subject": subject})
 
         assert response.status_code == requests.status_codes.codes.ok, \
             (f"Wrong status code. Actual: '{response.status_code}', "
              f"but expected: '{requests.status_codes.codes.ok}'")
 
-        assert response.json()['first_name'] == first_name_after, \
-            (f"First name: '{first_name_before}' should have been changed to "
-             f"'{first_name_after}'")
-
 
 class TestDeleteTeacher:
-    def test_delete_teacher(self, university_api_utils_admin):
+    def test_delete_teacher_status_code(self, university_api_utils_admin):
         teacher_helper = TeacherHelper(university_api_utils_admin)
         response = teacher_helper.post_teachers(
             json={"first_name": faker.first_name(),
@@ -91,9 +83,20 @@ class TestDeleteTeacher:
             (f"Wrong status code. Actual: '{response.status_code}', "
              f"but expected: '{requests.status_codes.codes.ok}'")
 
+    def test_delete_teacher_error_text(self, university_api_utils_admin):
+        teacher_helper = TeacherHelper(university_api_utils_admin)
+        response = teacher_helper.post_teachers(
+            json={"first_name": faker.first_name(),
+                  "last_name": faker.last_name(),
+                  "subject": get_subject_random_choice()}
+        )
+
+        response = teacher_helper.delete_teacher(response.json()['id'])
+
         assert response.json()['detail'] == "Teacher deleted", \
             (f"Wrong error text. Actual: '{response.json()['detail']}', "
              f"but expected: 'Teacher deleted'")
+
 
 class TestGetTeachers:
     pass

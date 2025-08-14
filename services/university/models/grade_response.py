@@ -11,6 +11,6 @@ class GradeStatisticResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     count: int = Field(ge=0)
-    min: int = Field(..., ge=0, le=5, description="оценки от 0 до 5") | None
-    max: int = Field(..., ge=0, le=5, description="оценки от 0 до 5") | None
-    avg: int = Field(..., ge=0, le=5, description="оценки от 0 до 5") | None
+    min: int | None = Field(..., ge=0, le=5)
+    max: int | None = Field(..., ge=0, le=5)
+    avg: float | None = Field(..., ge=0, le=5)

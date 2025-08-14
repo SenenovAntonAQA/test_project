@@ -6,4 +6,4 @@ class BaseGrade(BaseModel):
 
     teacher_id: int
     student_id: int
-    grade: int = Field(..., ge=0, le=5, description="оценки от 0 до 5")
+    grade: int = Field(ge=0, le=5)

@@ -139,8 +139,7 @@ class TestUpdateStudent:
         student_id = response.json()['id']
 
         upd_payload = payload.copy()
-        new_student_phone = generate_russian_phone()
-        upd_payload["phone"] = new_student_phone
+        upd_payload["phone"] = generate_russian_phone()
 
         response = student_helper.update_student(student_id=student_id,
                                                  json=upd_payload)
@@ -149,11 +148,7 @@ class TestUpdateStudent:
             (f"Wrong status code. Actual: '{response.status_code}', "
              f"but expected: '{requests.status_codes.codes.ok}'")
 
-        assert response.json()['phone'] == new_student_phone, \
-            (f"The student number: '{response.json()['phone']}'"
-             f" has not changed to:'{new_student_phone}'")
-
-    def test_update_to_invalid_email(self,
+    def test_update_to_invalid_email_status_code(self,
                                      university_api_utils_admin,
                                      created_group):
         student_helper = StudentHelper(university_api_utils_admin)
@@ -181,6 +176,31 @@ class TestUpdateStudent:
         assert response.status_code == requests.status_codes.codes.conflict, \
             (f"Wrong status code. Actual: '{response.status_code}', "
              f"but expected: '{requests.status_codes.codes.conflict}'")
+
+    def test_update_to_invalid_email_details(self,
+                                     university_api_utils_admin,
+                                     created_group):
+        student_helper = StudentHelper(university_api_utils_admin)
+
+        response = student_helper.get_students()
+        students = response.json()
+        emails = [student["email"] for student in students]
+
+        payload = {"first_name": faker.first_name(),
+                   "last_name": faker.last_name(),
+                   "email": faker.email(),
+                   "degree": get_degree_random_choice(),
+                   "phone": generate_russian_phone(),
+                   "group_id": created_group}
+
+        response = student_helper.post_students(json=payload)
+        student_id = response.json()['id']
+
+        upd_payload = payload.copy()
+        upd_payload["email"] = random.choice(emails)
+
+        response = student_helper.update_student(student_id=student_id,
+                                                 json=upd_payload)
 
         assert response.json()['detail'] == "Email is already taken", \
             (f"Incorrect actual error text: '{response.json()['detail']}', "

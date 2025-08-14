@@ -1,3 +1,4 @@
+import random
 import time
 
 import pytest
@@ -7,8 +8,14 @@ from faker import Faker
 from services.auth.auth_service import AuthService
 from services.auth.models.login_request import LoginRequest
 from services.auth.models.register_request import RegisterRequest
+from services.university.models.base_student import DegreeEnum
+from services.university.models.base_teacher import SubjectEnum
+from services.university.models.group_request import GroupRequest
+from services.university.models.student_request import StudentRequest
+from services.university.models.teacher_request import TeacherRequest
 from services.university.university_service import UniversityService
 from utils.api_utils import ApiUtils
+from utils.random_utils import generate_russian_phone
 
 faker = Faker()
 
@@ -81,3 +88,36 @@ def auth_service_readiness():
             break
     else:
         raise RuntimeError(f"Auth service wasn't started during '{timeout}' s.")
+
+@pytest.fixture
+def created_group(university_api_utils_admin):
+    university_service = UniversityService(api_utils=university_api_utils_admin)
+    group = GroupRequest(name=faker.name())
+    group_response = university_service.create_group(group_request=group)
+
+    return group_response.id
+
+
+@pytest.fixture
+def created_teacher(university_api_utils_admin):
+    university_service = UniversityService(api_utils=university_api_utils_admin)
+    teacher = TeacherRequest(first_name=faker.first_name(),
+                             last_name=faker.last_name(),
+                             subject=random.choice(
+                                 [subj for subj in SubjectEnum]))
+    teacher_response = university_service.create_teacher(teacher)
+
+    return teacher_response.id
+
+@pytest.fixture
+def created_student(university_api_utils_admin, created_group):
+    university_service = UniversityService(api_utils=university_api_utils_admin)
+    student = StudentRequest(first_name=faker.first_name(),
+                             last_name=faker.last_name(),
+                             email=faker.email(),
+                             degree=random.choice(
+                                 [degree for degree in DegreeEnum]),
+                             phone=generate_russian_phone(),
+                             group_id=created_group)
+    student_response = university_service.create_student(student)
+    return student_response.id
