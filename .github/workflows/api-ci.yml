@@ -35,6 +35,7 @@ jobs:
         run: ruff check .
 
       - name: Docker Compose up
+        working-directory: docker_folder
         run: docker compose up -d --build
 
       - name: Run tests (host network)
