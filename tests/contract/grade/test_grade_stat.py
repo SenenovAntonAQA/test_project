@@ -1,4 +1,4 @@
-import requests.status_codes
+import requests
 
 from logger.logger import Logger
 from services.university.helpers.grade_helper import GradeHelper

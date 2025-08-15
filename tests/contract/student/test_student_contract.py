@@ -11,7 +11,6 @@ from utils.random_utils import (generate_invalid_names,
                                 generate_russian_phone,
                                 generate_invalid_email,
                                 generate_invalid_groups,
-                                generate_invalid_group_ids,
                                 generate_unique_group_id)
 
 faker = Faker()
