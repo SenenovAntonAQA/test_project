@@ -46,13 +46,7 @@ jobs:
             -e BASE_URL=http://localhost:8000 \
             -v "$PWD":/work -w /work \
             python:3.12 \
-            bash -lc "pip install -r requirements.txt && pytest -q --maxfail=1 --disable-warnings
-
-      - name: Upload Allure raw results (artifact)
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results
+            bash -lc "pip install -r requirements.txt && pytest -q --maxfail=1 --disable-warnings --alluredir=allure-results"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -66,14 +60,11 @@ jobs:
       - name: Generate Allure report
         run: allure generate allure-results --clean -o _site
 
-      # === 7) Публикуем на GitHub Pages ===
       - name: Upload Pages artifact
-        if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) }}
         id: deployment
         uses: actions/deploy-pages@v4
