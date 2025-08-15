@@ -38,6 +38,9 @@ jobs:
         working-directory: docker_folder
         run: docker compose up -d --build
 
+      - name: Build test container
+        run: docker build -t my-tests .
+
       - name: Run tests (host network)
         run: |
           NETWORK=$(docker network ls --filter name=docker_folder_default -q)
