@@ -1,6 +1,5 @@
 import random
 
-import requests.status_codes
 from faker import Faker
 
 from pytest_check import check
