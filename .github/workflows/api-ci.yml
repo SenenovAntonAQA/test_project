@@ -22,7 +22,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
@@ -39,7 +39,9 @@ jobs:
         run: docker compose up -d --build
 
       - name: Run tests (host network)
-        run: pytest
+        run: |
+          NETWORK=$(docker network ls --filter name=docker_folder_default -q)
+          docker run --rm --network $NETWORK my-tests
 
       - name: Setup Java
         uses: actions/setup-java@v4
