@@ -1,0 +1,75 @@
+name: API tests
+
+on:
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+# Права для деплоя GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Docker Compose up
+        run: docker compose up -d --build
+
+      - name: Run API tests (host network)
+        run: |
+          mkdir -p allure-results
+          docker run --rm \
+            --network host \
+            -e BASE_URL=http://localhost:8000 \
+            -v "$PWD":/work -w /work \
+            python:3.12 \
+            bash -lc "pip install -r requirements.txt && pytest -q --maxfail=1 --disable-warnings
+
+      - name: Upload Allure raw results (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Allure CLI
+        run: npm i -g allure-commandline --no-fund --no-audit
+
+      - name: Generate Allure report
+        run: allure generate allure-results --clean -o _site
+
+      # === 7) Публикуем на GitHub Pages ===
+      - name: Upload Pages artifact
+        if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) }}
+        id: deployment
+        uses: actions/deploy-pages@v4
