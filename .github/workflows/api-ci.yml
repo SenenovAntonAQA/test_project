@@ -25,6 +25,9 @@ jobs:
           python-version: '3.13'
           cache: 'pip'
 
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Install Ruff
         run: pip install ruff
 
@@ -34,7 +37,7 @@ jobs:
       - name: Docker Compose up
         run: docker compose up -d --build
 
-      - name: Run API tests (host network)
+      - name: Run tests (host network)
         run: |
           mkdir -p allure-results
           docker run --rm \
