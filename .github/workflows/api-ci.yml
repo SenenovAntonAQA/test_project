@@ -105,9 +105,10 @@ jobs:
       - name: Show test status
         run: |
           code=$(cat test_exit_code.txt)
-          echo "Test exit code: $code"
-          if [ "$code" != "0" ]; then
-            echo "Some tests failed, but report was generated"
+          if [ "$code" = "0" ]; then
+            echo "All tests passed ✅"
+          else
+            echo "Some tests failed ❌"
           fi
 
   publish-report:
