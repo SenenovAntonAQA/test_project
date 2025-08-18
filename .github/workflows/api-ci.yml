@@ -40,52 +40,65 @@ jobs:
         run: docker build -t my-tests .
 
       - name: Run tests (host network)
-        run: docker run --rm --network host my-tests
+        run: docker run --rm --network host -v ${{ github.workspace }}/allure-results:/app/allure-results my-tests
 
       - name: Store allure results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path:
-            allure-results
+          path: allure-results
           retention-days: 1
 
   generate-report:
     runs-on: ubuntu-latest
     needs: lint-and-test
     name: Generate report
+
     steps:
       - uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
           java-version: '17'
 
-      - run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.23.1/allure-2.23.1.tgz && sudo tar -zxvf allure-2.23.1.tgz -C /opt/ && sudo ln -s /opt/allure-2.23.1/bin/allure /usr/bin/allure
+      - name: Install Allure CLI
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.23.1/allure-2.23.1.tgz
+          sudo tar -zxvf allure-2.23.1.tgz -C /opt/
+          sudo ln -s /opt/allure-2.23.1/bin/allure /usr/bin/allure
 
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+      - name: Download allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
 
-      - run: allure generate -c allure-results -o _site
+      - name: Generate Allure report
+        run: allure generate -c allure-results -o _site
 
       - name: Store generated report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: _site
-          path:
-            _site
+          name: allure-report
+          path: _site
           retention-days: 1
 
   publish-report:
     runs-on: ubuntu-latest
     needs: generate-report
     name: Report publication
+
     steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+      - name: Download generated report
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: _site
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1.2.9
+        uses: actions/deploy-pages@v4
