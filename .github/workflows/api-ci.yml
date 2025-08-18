@@ -11,9 +11,9 @@ permissions:
   id-token: write
 
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
-    name: Lint and start tests
+    name: Linter
 
     steps:
       - name: Checkout
@@ -31,8 +31,32 @@ jobs:
       - name: Ruff check
         run: ruff check .
 
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    name: Tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
       - name: Docker Compose up
         working-directory: docker_folder
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB_AUTH: ${{ secrets.POSTGRES_DB_AUTH }}
+          POSTGRES_DB_UNIVERSITY: ${{ secrets.POSTGRES_DB_UNIVERSITY }}
+          AUTH_SERVICE_INTERNAL_URL: ${{ secrets.AUTH_SERVICE_INTERNAL_URL }}
+          AUTH_SERVICE_API_URL: ${{ secrets.AUTH_SERVICE_API_URL }}
+          UNIVERSITY_SERVICE_INTERNAL_URL: ${{ secrets.UNIVERSITY_SERVICE_INTERNAL_URL }}
+          UNIVERSITY_SERVICE_API_URL: ${{ secrets.UNIVERSITY_SERVICE_API_URL }}
         run: docker compose up -d --build
 
       - name: Build test container
@@ -44,8 +68,14 @@ jobs:
           docker run --rm --network host \
             -v ${{ github.workspace }}/allure-results:/app/allure-results \
             my-tests
-          echo $? > test_exit_code.txt
+          exit_code=$?
           set -e
+
+          if [ "$exit_code" = "0" ]; then
+            echo -e "\033[0;32mAll tests passed ✅\033[0m"
+          else
+            echo -e "\033[0;31mSome tests failed ❌\033[0m"
+          fi
 
       - name: Store allure results
         uses: actions/upload-artifact@v4
@@ -54,16 +84,9 @@ jobs:
           path: allure-results
           retention-days: 1
 
-      - name: Store test exit code
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-exit-code
-          path: test_exit_code.txt
-          retention-days: 1
-
   generate-report:
     runs-on: ubuntu-latest
-    needs: lint-and-test
+    needs: test
     name: Generate report
 
     steps:
@@ -84,32 +107,15 @@ jobs:
           name: allure-results
           path: allure-results
 
-      - name: Download test exit code
-        uses: actions/download-artifact@v4
-        with:
-          name: test-exit-code
-          path: .
-
       - name: Generate Allure report
-        run: |
-          # Генерируем отчет, даже если результаты неполные или тесты упали
-          allure generate -c allure-results -o _site || true
+        run: allure generate -c allure-results -o allure-reports
 
       - name: Store generated report
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: _site
+          path: allure-reports
           retention-days: 1
-
-      - name: Show test status
-        run: |
-          code=$(cat test_exit_code.txt)
-          if [ "$code" = "0" ]; then
-            echo "All tests passed ✅"
-          else
-            echo "Some tests failed ❌"
-          fi
 
   publish-report:
     runs-on: ubuntu-latest
@@ -121,12 +127,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-report
-          path: _site
+          path: allure-reports
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: allure-reports
 
       - name: Deploy to GitHub Pages
         id: deployment
