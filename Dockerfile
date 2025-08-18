@@ -15,4 +15,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Команда запуска тестов
-CMD ["pytest --alluredir=allure-results"]
+CMD ["pytest", "--alluredir=allure-results"]
