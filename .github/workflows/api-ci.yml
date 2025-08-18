@@ -22,11 +22,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.13'
           cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
 
       - name: Install Ruff
         run: pip install ruff
@@ -42,27 +39,4 @@ jobs:
         run: docker build -t my-tests .
 
       - name: Run tests (host network)
-        run: |
-          NETWORK=$(docker network ls --filter name=docker_folder_default -q)
-          docker run --rm --network $NETWORK my-tests
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Allure CLI
-        run: npm i -g allure-commandline --no-fund --no-audit
-
-      - name: Generate Allure report
-        run: allure generate allure-results --clean -o _site
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: docker run --rm --network host my-tests
