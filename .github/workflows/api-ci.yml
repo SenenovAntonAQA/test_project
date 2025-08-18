@@ -5,7 +5,6 @@ on:
     branches: [ "**" ]
   workflow_dispatch:
 
-# Права для деплоя GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -39,14 +38,27 @@ jobs:
       - name: Build test container
         run: docker build -t my-tests .
 
-      - name: Run tests (host network)
-        run: docker run --rm --network host my-tests
+      - name: Run tests (host network, capture exit code)
+        run: |
+          set +e
+          docker run --rm --network host \
+            -v ${{ github.workspace }}/allure-results:/app/allure-results \
+            my-tests
+          echo $? > test_exit_code.txt
+          set -e
 
       - name: Store allure results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: allure-results
+          retention-days: 1
+
+      - name: Store test exit code
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-exit-code
+          path: test_exit_code.txt
           retention-days: 1
 
   generate-report:
@@ -72,6 +84,12 @@ jobs:
           name: allure-results
           path: allure-results
 
+      - name: Download test exit code
+        uses: actions/download-artifact@v4
+        with:
+          name: test-exit-code
+          path: .
+
       - name: Generate Allure report
         run: allure generate -c allure-results -o _site
 
@@ -81,6 +99,14 @@ jobs:
           name: allure-report
           path: _site
           retention-days: 1
+
+      - name: Fail if tests failed
+        run: |
+          code=$(cat test_exit_code.txt)
+          if [ "$code" != "0" ]; then
+            echo "Some tests failed"
+            exit 1
+          fi
 
   publish-report:
     runs-on: ubuntu-latest
